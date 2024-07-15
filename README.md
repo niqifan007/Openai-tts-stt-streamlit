@@ -1,6 +1,8 @@
 # OpenAI 文字转语音 & 语音转文字界面
 
 这是一个使用 OpenAI API 的 Streamlit 应用程序，可以将文字转换为语音（TTS）或将语音转换为文字（STT）。
+![image](https://github.com/user-attachments/assets/c091a50b-4b81-4d9c-990d-d2f394471506)
+
 
 ## 功能
 
