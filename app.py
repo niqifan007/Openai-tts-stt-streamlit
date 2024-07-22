@@ -145,7 +145,7 @@ def display_history():
     st.markdown("---")
     st.subheader("历史记录")
 
-    for item in reversed(st.session_state.history):
+    for index, item in enumerate(reversed(st.session_state.history)):
         if item["type"] == "tts":
             with st.expander(f"{item['timestamp']} - {item['voice']}"):
                 st.write(f"文本: {item['text']}")
@@ -156,7 +156,8 @@ def display_history():
                     label=f"下载 {item['filename']}",
                     data=item['audio'],
                     file_name=item['filename'],
-                    mime=f"audio/{item['format']}"
+                    mime=f"audio/{item['format']}",
+                    key=f"download_button_{item['timestamp']}_{index}"  # Add a unique key
                 )
         elif item["type"] == "stt":
             with st.expander(f"{item['timestamp']} - {item['filename']}"):
