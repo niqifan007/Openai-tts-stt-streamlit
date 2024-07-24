@@ -2,10 +2,12 @@ import streamlit as st
 import requests
 import io
 from datetime import datetime
+import math  # 添加这行来导入 math 模块
+
 
 # Constants
-TTS_API_URL = "https://api.openai.com/v1/audio/speech"
-STT_API_URL = "https://api.openai.com/v1/audio/transcriptions"
+TTS_API_URL = "https://api.wakaa.tech/v1/audio/speech"
+STT_API_URL = "https://api.wakaa.tech/v1/audio/transcriptions"
 TTS_MODELS = ["tts-1-hd", "tts-1"]
 TTS_VOICES = ["shimmer", "echo", "fable", "onyx", "nova", "alloy"]
 AUDIO_FORMATS = ["aac", "opus", "mp3", "flac", "wav"]
@@ -20,7 +22,7 @@ if 'history' not in st.session_state:
     st.session_state.history = []
 
 def init_ui():
-    st.title("OpenAI 文字转语音 & 语音转文字界面 V2.2")
+    st.title("OpenAI 文字转语音 & 语音转文字界面 V2.3")
     tab = st.selectbox("选择功能:", ["文字转语音", "语音转文字"])
     api_key = st.text_input("输入你的OpenAI API密钥:", type="password")
     return tab, api_key
@@ -145,7 +147,43 @@ def display_history():
     st.markdown("---")
     st.subheader("历史记录")
 
-    for index, item in enumerate(reversed(st.session_state.history)):
+    # 分页逻辑
+    items_per_page = 10
+    total_items = len(st.session_state.history)
+    total_pages = math.ceil(total_items / items_per_page)
+
+    # 使用 session_state 来保存当前页码
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 1
+
+    # 创建分页控件
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        if st.button("首页"):
+            st.session_state.current_page = 1
+
+    with col2:
+        if st.button("上一页") and st.session_state.current_page > 1:
+            st.session_state.current_page -= 1
+
+    with col3:
+        st.write(f"页 {st.session_state.current_page}/{total_pages}")
+
+    with col4:
+        if st.button("下一页") and st.session_state.current_page < total_pages:
+            st.session_state.current_page += 1
+
+    with col5:
+        if st.button("末页"):
+            st.session_state.current_page = total_pages
+
+    # 计算当前页的起始和结束索引
+    start_idx = (st.session_state.current_page - 1) * items_per_page
+    end_idx = min(start_idx + items_per_page, total_items)
+
+    # 显示当前页的历史记录
+    for index, item in enumerate(reversed(st.session_state.history[start_idx:end_idx]), start=start_idx):
         if item["type"] == "tts":
             with st.expander(f"{item['timestamp']} - {item['voice']}"):
                 st.write(f"文本: {item['text']}")
@@ -157,7 +195,7 @@ def display_history():
                     data=item['audio'],
                     file_name=item['filename'],
                     mime=f"audio/{item['format']}",
-                    key=f"download_button_{item['timestamp']}_{index}"  # Add a unique key
+                    key=f"download_button_{item['timestamp']}_{index}"
                 )
         elif item["type"] == "stt":
             with st.expander(f"{item['timestamp']} - {item['filename']}"):
